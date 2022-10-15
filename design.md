@@ -11,7 +11,7 @@
 
 1) バックエンド：GoでAPIを用意する
     - DB操作：GORM(仮)
-    - 対クライアント：Gin
+    - 対クライアント：Gin + WebSocket
 2) フロントエンド：JSでAPIを叩く
 
 ## ディレクトリ構成
@@ -35,25 +35,24 @@
 ```mermaid
 sequenceDiagram
     participant C as Client
+    participant OC as OtherClient
     participant S as API
     participant D as DB
-    C->>+S: open websocket
 
-    C-->>+S: send Message
+    C-->>+S: post Message
     S-->>+D: write Message
     D-->>-S: return OK
     S-->>-C: return OK
 
     Note right of S: 更新があればメッセージを返す
-    loop MessageCheck
+    loop MessageBroadcast
         S-->>C: return Messages
+        S-->>OC: return Messages
     end
 
     loop DBMessageDelete
         D-->>D: check Message count && delete Message
     end
-
-    S->>-C: close websocket
 ```
 
 クラス
