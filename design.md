@@ -22,7 +22,15 @@
 - db    : データベース
 - public: フロントエンド APIを叩く
 
-ダイアグラム
+## API設計
+
+(chat-room-usecase.drawioも参照すること)
+- getMessage
+    - クライアントが初接続時に叩くAPI　最新のメッセージを規定件数取得する
+- postMessage
+    - クライアントがメッセージを投稿するときに叩くAPI
+
+## ダイアグラム
 
 ```mermaid
 sequenceDiagram
