@@ -35,6 +35,8 @@
     - 対クライアント：Gin + WebSocket
 2) サーバー・クライアント間通信：WebSocketで完結させる
 3) フロントエンド：JSでAPIを叩く
+4) 動作デバイスはrhaspberry-pi3b上でdocker環境を想定
+5) alpine系でgoの公式イメージを想定
 
 ## ディレクトリ構成
 
