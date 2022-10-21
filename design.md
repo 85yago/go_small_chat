@@ -53,23 +53,74 @@
     - クライアントが初接続時に叩くAPI　最新のメッセージを規定件数取得する
 - postMessage
     - クライアントがメッセージを投稿するときに叩くAPI
+- (broadcast)
+    - サーバーからメッセージを配信するとき
 
 ### getMessage
 
+from client
 ```json
-[
-    "name":"ユーザーが決めた名前",
-    "message":"投稿するメッセージ(半角1文字以上)"
-]
+{
+    "method": "getMessage"
+}
+```
+
+from server
+```json
+{
+    "count": 10,
+    "data": [
+        {
+            "name":"ユーザーが決めた名前",
+            "message":"投稿するメッセージ(半角1文字以上)",
+            "createtime": "2022-10-1 10:10:10.111"
+        },
+        {},
+    ]
+}
 ```
 
 ### postMessage
 
+from client
+
 ```json
-[
+{
+    "method": "postMessage",
     "name":"ユーザーが決めた名前",
     "message":"投稿するメッセージ(半角1文字以上)"
-]
+}
+```
+
+from server
+
+```json
+{
+    "status": "OK"
+}
+```
+
+```json
+{
+    "status": "error"
+}
+```
+
+### (broadcast)
+
+from server
+
+```json
+{
+    "count": 1,
+    "data": [
+        {
+            "name":"ユーザーが決めた名前",
+            "message":"投稿するメッセージ(半角1文字以上)",
+            "createtime": "2022-10-1 10:10:10.111"
+        }
+    ]
+}
 ```
 
 ## ダイアグラム
@@ -82,7 +133,7 @@ sequenceDiagram
     participant D as DB
 
     C-->>+S: post Message
-    S-->>+D: write Message
+    S-->>+D: write DBMessage
     D-->>-S: return OK
     S-->>-C: return OK
 
@@ -93,20 +144,22 @@ sequenceDiagram
     end
 
     loop DBMessageDelete
-        D-->>D: check Message count && delete Message
+        D-->>D: check DBMessage count && delete DBMessage
     end
 ```
 
 クラス
 ```mermaid
 classDiagram
-    class Message{
+    class DBMessage{
         +int id
         +String name
         +String message
+        +String ipaddress
         +date createtime
         +write(name, message) bool
         +get() bool 
         +delete() bool
     }
 ```
+
