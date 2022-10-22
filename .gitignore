@@ -88,3 +88,7 @@ $RECYCLE.BIN/
 
 # Enviroment file
 .env
+
+# DB data
+db_data/*
+!db_data/README.md
