@@ -1,0 +1,35 @@
+version: "3"
+
+services:
+  api:
+    build:
+      context: app
+      dockerfile: Dockerfile
+
+    ports:
+      - ${SERVICE_PORT:-6439}:6439
+
+    restart: always
+    depends_on:
+      - db
+
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?err}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
+      - TZ="Asia/Tokyo"
+
+  db:
+    image: postgres:15-alpine
+
+    restart: always
+
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?err}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
+      - TZ="Asia/Tokyo"
+
+    volumes:
+      - "db_data:/var/lib/postgresql/data"
+
+volumes:
+  db_data:
