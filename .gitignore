@@ -92,3 +92,6 @@ $RECYCLE.BIN/
 # DB data
 db_data/*
 !db_data/README.md
+
+# go mod
+app/vendor
