@@ -3,4 +3,5 @@
   "[go]": {
     "editor.defaultFormatter": "golang.go"
   },
+  "editor.unicodeHighlight.ambiguousCharacters": false,
 }
