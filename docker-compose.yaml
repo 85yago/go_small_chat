@@ -29,7 +29,4 @@ services:
       - TZ="Asia/Tokyo"
 
     volumes:
-      - "db_data:/var/lib/postgresql/data"
-
-volumes:
-  db_data:
+      - "./db_data:/var/lib/postgresql/data"
