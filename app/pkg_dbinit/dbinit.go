@@ -33,5 +33,9 @@ func DbInitialization() *gorm.DB {
 	// Migrate the schema
 	db.AutoMigrate(&Message{})
 
+	// TODO: デバッグ用
+	// IDの連番の開始を1にリセットしている
+	db.Exec("SELECT setval ('messages_id_seq', 1, false)")
+
 	return db
 }
