@@ -1,39 +1,91 @@
 package main
 
 import (
-	"app/pkg_dbinit"
+	"encoding/json"
 	"fmt"
-	"strconv"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
+var upgrader = websocket.Upgrader{
+	// TODO: ここ絶対直すこと
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
 func main() {
-	db := pkg_dbinit.DbInitialization()
+	// TODO: DBの初期化をする
+	r := gin.Default()
 
-	delete_err := db.Where("1 = 1").Delete(&pkg_dbinit.Message{})
-	fmt.Println(delete_err)
-	delete_err = db.Unscoped().Where("1 = 1").Delete(&pkg_dbinit.Message{})
-	fmt.Println(delete_err)
-	var message pkg_dbinit.Message
-	// https://gorm.io/ja_JP/docs/delete.html#%E8%AB%96%E7%90%86%E5%89%8A%E9%99%A4%E3%81%95%E3%82%8C%E3%81%9F%E3%83%AC%E3%82%B3%E3%83%BC%E3%83%89%E3%82%92%E5%8F%96%E5%BE%97%E3%81%99%E3%82%8B
-	db.Unscoped().Last(&message)
-	fmt.Println("db.Unscoped().Last(&message)")
-	fmt.Println(message.ID)
-	fmt.Println(message.Name)
-	fmt.Println(message.Message)
-	fmt.Println(message.IpAddress)
-	fmt.Println(message.CreatedAt)
+	// broadcast用のmap生やしてGETの中でwsを保存しておく
+	var wsMap map[int]*websocket.Conn
 
-	db.Create(&pkg_dbinit.Message{Name: "hoge", Message: "†💩† THE GRAVE OF UNCHI " + strconv.Itoa(int(message.ID)+1), IpAddress: "192.0.2.0"})
+	// TODO: broadcast用の関数を書いてチャネルを渡しておく、でそれに更新来たメッセージを投げる
 
-	var messages []pkg_dbinit.Message
+	// このmapをgoroutineで回してbroadcast、これは更新があったら回すのを生やすって感じでよさそう？要検討
+	go func(wsMap *map[int]*websocket.Conn, c chan string) {
+		// チャネルにメッセージが放り込まれるの待ち
+		// interface定義してちゃんとそっちでやるとWriteJSONが使えると思う
+		mess := <-c
+		for _, ws := range *wsMap {
+			err := ws.WriteMessage(websocket.TextMessage, []byte(mess))
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+		}
+	}(&wsMap) // 引数不足、チャネルを作って渡すこと
+	// closeをどうするか->とりあえず後回し、wsが生きてるか確認できるのでは？
+	// ping pongで確認できるじゃん、送る前に確認する or 別ルーチンで確認と削除
 
-	db.Find(&messages)
-	for _, m := range messages {
-		fmt.Println(m.ID)
-		fmt.Println(m.Name)
-		fmt.Println(m.Message)
-		fmt.Println(m.IpAddress)
-		fmt.Println(m.CreatedAt)
-	}
+	r.GET("/", func(c *gin.Context) {
+		// websocketで接続
+		ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer ws.Close()
 
+		for {
+			// メッセージを読む
+			mt, message, err := ws.ReadMessage()
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+
+			// jsonのパース
+			var rawJson map[string]any
+			err = json.Unmarshal(message, &rawJson)
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+
+			// クライアントがどっちを呼び出してるか判定
+			switch rawJson["method"] {
+			case "getMessage":
+				// TODO: getMessage関数に変える
+				message = []byte("get")
+			case "postMessage":
+				// TODO: postMessage関数に変える
+				message = []byte("post")
+			default:
+				message = []byte(c.ClientIP())
+			}
+
+			// クライアントに返す
+			err = ws.WriteMessage(mt, message)
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+		}
+	})
+
+	r.Run(":8080") // 8080でリッスン
 }
