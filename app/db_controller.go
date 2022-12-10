@@ -38,7 +38,7 @@ func write_db(db *gorm.DB, message pkg_dbinit.Message) error {
 // 受け取ったスライスにdb内のメッセージをすべて突っ込む
 func read_db(db *gorm.DB, messages *[]pkg_dbinit.Message) error {
 
-	err := db.Find(messages)
+	err := db.Find(messages).Error
 
-	return err.Error
+	return err
 }
