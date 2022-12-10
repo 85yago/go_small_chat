@@ -35,6 +35,7 @@ type RetMessage struct {
 
 // getMessage関数が返す構造体
 type GetRetMessage struct {
+	Status  string // OKかerrorかのみ書き込む
 	Count   int
 	Message []RetMessage
 }
