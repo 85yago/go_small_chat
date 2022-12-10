@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -19,6 +20,21 @@ type ClientMessage struct {
 type WsMap struct {
 	sync.RWMutex
 	m map[int]*websocket.Conn
+}
+
+type RetMessage struct {
+	Name        string
+	Message     string
+	CreatedTime time.Time
+}
+
+type GetRetMessage struct {
+	Count   int
+	Message []RetMessage
+}
+
+type PostRetMessage struct {
+	Status string
 }
 
 var upgrader = websocket.Upgrader{
