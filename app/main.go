@@ -99,8 +99,10 @@ func broadcastMsg(wsMap *WsMap, c <-chan RetMessage) {
 		// interface定義してちゃんとそっちでやるとWriteJSONが使えると思う
 		mess := <-c
 
+		// map用のロック
 		wsMap.RLock()
 		for _, ws := range wsMap.m {
+			// 各wsにメッセージを送る
 			err := ws.WriteJSON(mess)
 			if err != nil {
 				fmt.Println(err)
