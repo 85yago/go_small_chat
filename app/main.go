@@ -1,6 +1,7 @@
 package main
 
 import (
+	"app/pkg_dbinit"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"gorm.io/gorm"
 )
 
 // クライアントから送られてくるjsonパース用
@@ -21,7 +23,7 @@ type ClientMessage struct {
 // wsの保存用
 type WsMap struct {
 	sync.RWMutex
-	m map[int]*websocket.Conn
+	m map[*websocket.Conn]struct{}
 }
 
 // Message構造体の必要な情報のみの構造体
@@ -42,6 +44,8 @@ type PostRetMessage struct {
 	Status string // OKかerrorかのみ書き込む
 }
 
+// upgraderはHTTPをWSにするときに呼ばれる
+// ここで許可するoriginや接続時間を設定する
 var upgrader = websocket.Upgrader{
 	// TODO: ここ絶対直すこと
 	CheckOrigin: func(r *http.Request) bool {
@@ -50,7 +54,7 @@ var upgrader = websocket.Upgrader{
 }
 
 // クライアントとのwsの処理
-func procClient(c *gin.Context, ws *websocket.Conn) {
+func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn) {
 	for {
 		// メッセージを読む
 		mt, message, err := ws.ReadMessage()
@@ -101,7 +105,7 @@ func broadcastMsg(wsMap *WsMap, c <-chan RetMessage) {
 
 		// map用のロック
 		wsMap.RLock()
-		for _, ws := range wsMap.m {
+		for ws := range wsMap.m {
 			// 各wsにメッセージを送る
 			err := ws.WriteJSON(mess)
 			if err != nil {
@@ -111,43 +115,56 @@ func broadcastMsg(wsMap *WsMap, c <-chan RetMessage) {
 		}
 		wsMap.RUnlock()
 	}
-
-	// closeをどうするか->とりあえず後回し、wsが生きてるか確認できるのでは？
-	// ping pongで確認できるじゃん、送る前に確認する or 別ルーチンで確認と削除
 }
 
-func main() {
-	// DBの初期化をする
-	// db := pkg_dbinit.DbInitialization()
-
-	// ginの初期化
-	r := gin.Default()
-
-	// broadcast用のmap生やしてGETの中でwsを保存しておく
-	var wsIndex int = 0
-	var wsMap = WsMap{m: make(map[int]*websocket.Conn)}
-
-	// ブロードキャスト用のチャネル
-	broadcastChan := make(chan RetMessage)
-	// ブロードキャスト用の関数
-	go broadcastMsg(&wsMap, broadcastChan)
-
-	r.GET("/", func(c *gin.Context) {
+// ws用のエンドポイントのハンドラ
+func wshandler(db *gorm.DB, wsMap *WsMap) func(*gin.Context) {
+	return func(c *gin.Context) {
 		// websocketで接続
 		ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
+
+		// r.GETが終わった時にクローズ（クローズハンドラがないから特に何もしない）
 		defer ws.Close()
+
+		// r.GETが終わった時にwsをwsMapから削除
+		defer func(wsMap *WsMap) {
+			wsMap.Lock()
+			delete(wsMap.m, ws)
+			wsMap.Unlock()
+		}(wsMap)
+
 		// ブロードキャスト用にソケットを保存
 		wsMap.Lock()
-		wsMap.m[wsIndex] = ws
+		wsMap.m[ws] = struct{}{}
 		wsMap.Unlock()
 
 		// クライアントからのwebsocketを処理
-		procClient(c, ws)
-	})
+		procClient(c, db, ws)
+	}
+}
 
-	r.Run(":8080") // 8080でリッスン
+func main() {
+	// DBの初期化をする
+	db := pkg_dbinit.DbInitialization()
+
+	// ginの初期化
+	r := gin.Default()
+
+	// broadcast用のmap生やしてGETの中でwsを保存しておく
+	var wsMap = WsMap{m: make(map[*websocket.Conn]struct{})}
+
+	// ブロードキャスト用のチャネル
+	broadcastChan := make(chan RetMessage)
+	// ブロードキャスト用の関数
+	go broadcastMsg(&wsMap, broadcastChan)
+
+	// /wsでハンドリング
+	r.GET("/ws", wshandler(db, &wsMap))
+
+	// 8080でリッスン
+	r.Run(":8080")
 }
