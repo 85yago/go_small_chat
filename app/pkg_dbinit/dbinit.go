@@ -35,7 +35,7 @@ func DbInitialization() *gorm.DB {
 
 	// TODO: デバッグ用
 	// IDの連番の開始を1にリセットしている
-	db.Exec("SELECT setval ('messages_id_seq', 1, false)")
+	// db.Exec("SELECT setval ('messages_id_seq', 1, false)")s
 
 	return db
 }

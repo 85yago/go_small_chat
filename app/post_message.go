@@ -31,7 +31,7 @@ func postMessage(c *gin.Context, db *gorm.DB, broadcastChan chan<- RetMessage, c
 		// 書き込みに成功したらチャンネルにメッセージを流し込む
 		ret.Status = "OK"
 		// !writedata にIDやcreatedAtが自動で付与されるのか不明
-		broadcastChan <- RetMessage{Name: writedata.Name, Message: writedata.Message, CreatedTime: writedata.CreatedAt}
+		broadcastChan <- RetMessage{Name: writedata.Name, Message: writedata.Message, CreatedAt: writedata.CreatedAt}
 	}
 
 	return ret

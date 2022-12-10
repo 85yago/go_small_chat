@@ -2,7 +2,6 @@ package main
 
 import (
 	"app/pkg_dbinit"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
@@ -28,9 +27,9 @@ type WsMap struct {
 
 // Message構造体の必要な情報のみの構造体
 type RetMessage struct {
-	Name        string
-	Message     string
-	CreatedTime time.Time
+	Name      string
+	Message   string
+	CreatedAt time.Time
 }
 
 // getMessage関数が返す構造体
@@ -55,39 +54,31 @@ var upgrader = websocket.Upgrader{
 }
 
 // クライアントとのwsの処理
-func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn) {
+func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn, broadcastChan chan<- RetMessage) {
 	for {
 		// メッセージを読む
-		mt, message, err := ws.ReadMessage()
+		var clientMsg ClientMessage
+		err := ws.ReadJSON(&clientMsg)
 		if err != nil {
 			fmt.Println(err)
 			break
 		}
 
-		// jsonのパース
-		var clientMsg ClientMessage
-		err = json.Unmarshal(message, &clientMsg)
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
+		var retMsg any
 
 		// 送られたjson読んでクライアントがどっちを呼び出してるか判定
 		switch clientMsg.Method {
 		case "getMessage":
-			// TODO: getMessage関数に変える
-			message = []byte("get")
+			retMsg = getMessage(db)
 		case "postMessage":
-			// TODO: postMessage関数に変える、ClientMessage型で渡す
-			message = []byte("post")
+			retMsg = postMessage(c, db, broadcastChan, clientMsg)
 		default:
-			// TODO: methodエラーを入れる
-			message = []byte(c.ClientIP())
+			retMsg = PostRetMessage{Status: "method error."}
+
 		}
 
+		err = ws.WriteJSON(retMsg)
 		// クライアントに返す
-		// TODO: WriteJSONを使うこと
-		err = ws.WriteMessage(mt, message)
 		if err != nil {
 			fmt.Println(err)
 			break
@@ -119,7 +110,7 @@ func broadcastMsg(wsMap *WsMap, c <-chan RetMessage) {
 }
 
 // ws用のエンドポイントのハンドラ
-func wshandler(db *gorm.DB, wsMap *WsMap) func(*gin.Context) {
+func wshandler(db *gorm.DB, wsMap *WsMap, broadcastChan chan<- RetMessage) func(*gin.Context) {
 	return func(c *gin.Context) {
 		// websocketで接続
 		ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -144,7 +135,7 @@ func wshandler(db *gorm.DB, wsMap *WsMap) func(*gin.Context) {
 		wsMap.Unlock()
 
 		// クライアントからのwebsocketを処理
-		procClient(c, db, ws)
+		procClient(c, db, ws, broadcastChan)
 	}
 }
 
@@ -164,7 +155,7 @@ func main() {
 	go broadcastMsg(&wsMap, broadcastChan)
 
 	// /wsでハンドリング
-	r.GET("/ws", wshandler(db, &wsMap))
+	r.GET("/ws", wshandler(db, &wsMap, broadcastChan))
 
 	// 8080でリッスン
 	r.Run(":8080")
