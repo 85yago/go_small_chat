@@ -11,30 +11,35 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// クライアントから送られてくるjsonパース用
 type ClientMessage struct {
 	Method  string
 	Name    string
 	Message string
 }
 
+// wsの保存用
 type WsMap struct {
 	sync.RWMutex
 	m map[int]*websocket.Conn
 }
 
+// Message構造体の必要な情報のみの構造体
 type RetMessage struct {
 	Name        string
 	Message     string
 	CreatedTime time.Time
 }
 
+// getMessage関数が返す構造体
 type GetRetMessage struct {
 	Count   int
 	Message []RetMessage
 }
 
+// postMessage関数が返す構造体
 type PostRetMessage struct {
-	Status string
+	Status string // OKかerrorかのみ書き込む
 }
 
 var upgrader = websocket.Upgrader{
@@ -44,6 +49,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+// クライアントとのwsの処理
 func procClient(c *gin.Context, ws *websocket.Conn) {
 	for {
 		// メッセージを読む
@@ -83,7 +89,8 @@ func procClient(c *gin.Context, ws *websocket.Conn) {
 	}
 }
 
-func broadcastMsg(wsMap *WsMap, c <-chan string) {
+// cに送られたメッセージをブロードキャストする関数
+func broadcastMsg(wsMap *WsMap, c <-chan RetMessage) {
 	// このmapをgoroutineで回してbroadcast、これは更新があったら回すのを生やすって感じでよさそう？要検討
 
 	// チャネルにメッセージが放り込まれるの待ち
@@ -116,7 +123,7 @@ func main() {
 	var wsMap = WsMap{m: make(map[int]*websocket.Conn)}
 
 	// ブロードキャスト用のチャネル
-	broadcastChan := make(chan string)
+	broadcastChan := make(chan RetMessage)
 	// ブロードキャスト用の関数
 	go broadcastMsg(&wsMap, broadcastChan)
 
