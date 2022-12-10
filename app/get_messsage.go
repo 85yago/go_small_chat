@@ -15,7 +15,7 @@ func getMessage(db *gorm.DB) GetRetMessage {
 	if err != nil {
 		fmt.Println(err)
 		// エラーならerrorだけ書いて返す
-		return GetRetMessage{Status: "error"}
+		return GetRetMessage{Status: err.Error()}
 	}
 
 	// retにメッセージを入れる
