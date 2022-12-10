@@ -10,9 +10,10 @@ const MSG_MAX = 30
 
 // 受け取った1件のメッセージをDBに書きこむ
 // MSG_MAX件を超えていたら論理削除する
-func write_db(db *gorm.DB, message pkg_dbinit.Message) error {
+// 引数message にID, createdAtの情報が付加される
+func write_db(db *gorm.DB, message *pkg_dbinit.Message) error {
 	// メッセージを書きこみ
-	err := db.Create(&message).Error
+	err := db.Create(message).Error
 	if err != nil {
 		return err
 	}
