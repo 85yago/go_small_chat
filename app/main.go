@@ -81,6 +81,7 @@ func procClient(c *gin.Context, ws *websocket.Conn) {
 		}
 
 		// クライアントに返す
+		// TODO: WriteJSONを使うこと
 		err = ws.WriteMessage(mt, message)
 		if err != nil {
 			fmt.Println(err)
@@ -93,19 +94,21 @@ func procClient(c *gin.Context, ws *websocket.Conn) {
 func broadcastMsg(wsMap *WsMap, c <-chan RetMessage) {
 	// このmapをgoroutineで回してbroadcast、これは更新があったら回すのを生やすって感じでよさそう？要検討
 
-	// チャネルにメッセージが放り込まれるの待ち
-	// interface定義してちゃんとそっちでやるとWriteJSONが使えると思う
-	mess := <-c
+	for {
+		// チャネルにメッセージが放り込まれるの待ち
+		// interface定義してちゃんとそっちでやるとWriteJSONが使えると思う
+		mess := <-c
 
-	wsMap.RLock()
-	for _, ws := range wsMap.m {
-		err := ws.WriteMessage(websocket.TextMessage, []byte(mess))
-		if err != nil {
-			fmt.Println(err)
-			break
+		wsMap.RLock()
+		for _, ws := range wsMap.m {
+			err := ws.WriteJSON(mess)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
 		}
+		wsMap.RUnlock()
 	}
-	wsMap.RUnlock()
 
 	// closeをどうするか->とりあえず後回し、wsが生きてるか確認できるのでは？
 	// ping pongで確認できるじゃん、送る前に確認する or 別ルーチンで確認と削除
