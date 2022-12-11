@@ -189,7 +189,7 @@ func main() {
 	r.StaticFile("/", "../public/index.html")
 
 	// /wsでハンドリング
-	// ip制限を書けるミドルウェアも挟む
+	// ip制限をかけるミドルウェアも挟む
 	r.GET("/ws", ipBan(internalIpList), wshandler(db, &wsMap, &broadcastChan))
 
 	// 8080でリッスン
