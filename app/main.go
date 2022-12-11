@@ -25,6 +25,12 @@ type WsMap struct {
 	m map[*websocket.Conn]struct{}
 }
 
+// ブロードキャスト用のチャネル
+type BroadChan struct {
+	sync.RWMutex
+	c chan RetMessage
+}
+
 // Message構造体の必要な情報のみの構造体
 type RetMessage struct {
 	Name      string
@@ -54,7 +60,7 @@ var upgrader = websocket.Upgrader{
 }
 
 // クライアントとのwsの処理
-func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn, broadcastChan chan<- RetMessage) {
+func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn, broadcastChan *BroadChan) {
 	for {
 		// メッセージを読む
 		var clientMsg ClientMessage
@@ -71,13 +77,14 @@ func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn, broadcastChan c
 		case "getMessage":
 			retMsg = getMessage(db)
 		case "postMessage":
-			retMsg = postMessage(c, db, broadcastChan, clientMsg)
+			retMsg = postMessage(c, db, broadcastChan.c, clientMsg)
 		default:
-			retMsg = PostRetMessage{Status: "method error."}
-
+			retMsg = PostRetMessage{Status: "method error"}
 		}
 
+		broadcastChan.Lock()
 		err = ws.WriteJSON(retMsg)
+		broadcastChan.Unlock()
 		// クライアントに返す
 		if err != nil {
 			fmt.Println(err)
@@ -87,16 +94,17 @@ func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn, broadcastChan c
 }
 
 // cに送られたメッセージをブロードキャストする関数
-func broadcastMsg(wsMap *WsMap, c <-chan RetMessage) {
+func broadcastMsg(wsMap *WsMap, c *BroadChan) {
 	// このmapをgoroutineで回してbroadcast、これは更新があったら回すのを生やすって感じでよさそう？要検討
 
 	for {
 		// チャネルにメッセージが放り込まれるの待ち
 		// interface定義してちゃんとそっちでやるとWriteJSONが使えると思う
-		mess := <-c
+		mess := <-c.c
 
-		// map用のロック
+		// map用とws用のロック
 		wsMap.RLock()
+		c.Lock()
 		for ws := range wsMap.m {
 			// 各wsにメッセージを送る
 			err := ws.WriteJSON(mess)
@@ -105,12 +113,13 @@ func broadcastMsg(wsMap *WsMap, c <-chan RetMessage) {
 				continue
 			}
 		}
+		c.Unlock()
 		wsMap.RUnlock()
 	}
 }
 
 // ws用のエンドポイントのハンドラ
-func wshandler(db *gorm.DB, wsMap *WsMap, broadcastChan chan<- RetMessage) func(*gin.Context) {
+func wshandler(db *gorm.DB, wsMap *WsMap, broadcastChan *BroadChan) func(*gin.Context) {
 	return func(c *gin.Context) {
 		// websocketで接続
 		ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -150,12 +159,13 @@ func main() {
 	var wsMap = WsMap{m: make(map[*websocket.Conn]struct{})}
 
 	// ブロードキャスト用のチャネル
-	broadcastChan := make(chan RetMessage)
+	var broadcastChan BroadChan
+	broadcastChan.c = make(chan RetMessage)
 	// ブロードキャスト用の関数
-	go broadcastMsg(&wsMap, broadcastChan)
+	go broadcastMsg(&wsMap, &broadcastChan)
 
 	// /wsでハンドリング
-	r.GET("/ws", wshandler(db, &wsMap, broadcastChan))
+	r.GET("/ws", wshandler(db, &wsMap, &broadcastChan))
 
 	// 8080でリッスン
 	r.Run(":8080")
