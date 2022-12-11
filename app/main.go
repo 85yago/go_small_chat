@@ -61,6 +61,17 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+// IPを弾くためのMiddleware
+// ginのmiddlewareは/wsへの接続時に呼ばれる
+// func ipBan() gin.HandlerFunc {
+// 	return func(ctx *gin.Context) {
+// 		ip := ctx.ClientIP()
+// 		if ip != "127.0.0.1" {
+
+// 		}
+// 	}
+// }
+
 // クライアントとのwsの処理
 func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn, broadcastChan *BroadChan) {
 	for {
