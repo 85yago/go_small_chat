@@ -16,14 +16,15 @@ func getMessage(db *gorm.DB) GetRetMessage {
 		fmt.Println(err)
 		// エラーならerrorだけ書いて返す
 		return GetRetMessage{Status: err.Error()}
-	}
+	} else {
+		// retにメッセージを入れる
+		var ret GetRetMessage
+		ret.Status = "OK"
+		for _, mess := range rawMessages {
+			ret.Message = append(ret.Message, RetMessage{Name: mess.Name, Message: mess.Message, CreatedAt: mess.CreatedAt})
+		}
+		ret.Count = len(ret.Message)
 
-	// retにメッセージを入れる
-	var ret GetRetMessage
-	for _, mess := range rawMessages {
-		ret.Message = append(ret.Message, RetMessage{Name: mess.Name, Message: mess.Message, CreatedTime: mess.CreatedAt})
+		return ret
 	}
-	ret.Count = len(ret.Message)
-
-	return ret
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"app/pkg_dbinit"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
@@ -26,11 +25,19 @@ type WsMap struct {
 	m map[*websocket.Conn]struct{}
 }
 
+// ブロードキャスト用のチャネル
+type BroadChan struct {
+	sync.RWMutex
+	c chan RetMessage
+}
+
 // Message構造体の必要な情報のみの構造体
 type RetMessage struct {
-	Name        string
-	Message     string
-	CreatedTime time.Time
+	Name      string
+	Message   string
+	CreatedAt time.Time
+	IsMe      bool
+	wsconn    *websocket.Conn
 }
 
 // getMessage関数が返す構造体
@@ -55,39 +62,32 @@ var upgrader = websocket.Upgrader{
 }
 
 // クライアントとのwsの処理
-func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn) {
+func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn, broadcastChan *BroadChan) {
 	for {
 		// メッセージを読む
-		mt, message, err := ws.ReadMessage()
+		var clientMsg ClientMessage
+		err := ws.ReadJSON(&clientMsg)
 		if err != nil {
 			fmt.Println(err)
 			break
 		}
 
-		// jsonのパース
-		var clientMsg ClientMessage
-		err = json.Unmarshal(message, &clientMsg)
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
+		var retMsg any
 
 		// 送られたjson読んでクライアントがどっちを呼び出してるか判定
 		switch clientMsg.Method {
 		case "getMessage":
-			// TODO: getMessage関数に変える
-			message = []byte("get")
+			retMsg = getMessage(db)
 		case "postMessage":
-			// TODO: postMessage関数に変える、ClientMessage型で渡す
-			message = []byte("post")
+			retMsg = postMessage(c, db, ws, broadcastChan.c, clientMsg)
 		default:
-			// TODO: methodエラーを入れる
-			message = []byte(c.ClientIP())
+			retMsg = PostRetMessage{Status: "method error"}
 		}
 
+		broadcastChan.Lock()
+		err = ws.WriteJSON(retMsg)
+		broadcastChan.Unlock()
 		// クライアントに返す
-		// TODO: WriteJSONを使うこと
-		err = ws.WriteMessage(mt, message)
 		if err != nil {
 			fmt.Println(err)
 			break
@@ -96,22 +96,38 @@ func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn) {
 }
 
 // cに送られたメッセージをブロードキャストする関数
-func broadcastMsg(wsMap *WsMap, c <-chan RetMessage) {
-	// このmapをgoroutineで回してbroadcast、これは更新があったら回すのを生やすって感じでよさそう？要検討
-
+func broadcastMsg(wsMap *WsMap, c *BroadChan) {
 	for {
 		// チャネルにメッセージが放り込まれるの待ち
-		// interface定義してちゃんとそっちでやるとWriteJSONが使えると思う
-		mess := <-c
+		msg := <-c.c
 
 		// map用のロック
 		wsMap.RLock()
 		for ws := range wsMap.m {
-			// 各wsにメッセージを送る
-			err := ws.WriteJSON(mess)
-			if err != nil {
-				fmt.Println(err)
-				continue
+			// 送信先が送信元と同じならば
+			if ws == msg.wsconn {
+				msg.IsMe = true
+
+				// ws用のロック
+				c.Lock()
+
+				// 各wsにメッセージを送る
+				err := ws.WriteJSON(msg)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+
+				c.Unlock()
+			} else {
+				msg.IsMe = false
+
+				// 各wsにメッセージを送る
+				err := ws.WriteJSON(msg)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
 			}
 		}
 		wsMap.RUnlock()
@@ -119,7 +135,7 @@ func broadcastMsg(wsMap *WsMap, c <-chan RetMessage) {
 }
 
 // ws用のエンドポイントのハンドラ
-func wshandler(db *gorm.DB, wsMap *WsMap) func(*gin.Context) {
+func wshandler(db *gorm.DB, wsMap *WsMap, broadcastChan *BroadChan) func(*gin.Context) {
 	return func(c *gin.Context) {
 		// websocketで接続
 		ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -144,7 +160,7 @@ func wshandler(db *gorm.DB, wsMap *WsMap) func(*gin.Context) {
 		wsMap.Unlock()
 
 		// クライアントからのwebsocketを処理
-		procClient(c, db, ws)
+		procClient(c, db, ws, broadcastChan)
 	}
 }
 
@@ -159,12 +175,13 @@ func main() {
 	var wsMap = WsMap{m: make(map[*websocket.Conn]struct{})}
 
 	// ブロードキャスト用のチャネル
-	broadcastChan := make(chan RetMessage)
+	var broadcastChan BroadChan
+	broadcastChan.c = make(chan RetMessage)
 	// ブロードキャスト用の関数
-	go broadcastMsg(&wsMap, broadcastChan)
+	go broadcastMsg(&wsMap, &broadcastChan)
 
 	// /wsでハンドリング
-	r.GET("/ws", wshandler(db, &wsMap))
+	r.GET("/ws", wshandler(db, &wsMap, &broadcastChan))
 
 	// 8080でリッスン
 	r.Run(":8080")
