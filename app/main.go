@@ -180,6 +180,11 @@ func main() {
 	// ブロードキャスト用の関数
 	go broadcastMsg(&wsMap, &broadcastChan)
 
+	// ページを返す
+	r.StaticFile("/chat", "../public/chat.html")
+	r.StaticFile("/chat.js", "../public/chat.js")
+	r.StaticFile("/", "../public/index.html")
+
 	// /wsでハンドリング
 	r.GET("/ws", wshandler(db, &wsMap, &broadcastChan))
 
