@@ -23,7 +23,7 @@ func write_db(db *gorm.DB, message *pkg_dbinit.Message) error {
 		ID uint
 	}
 	var search_ids []Id
-	err = db.Select("id").Model(&pkg_dbinit.Message{}).Order("created_at ASC").Limit(MSG_MAX).Find(&search_ids).Error
+	err = db.Select("id").Model(&pkg_dbinit.Message{}).Order("created_at DESC").Limit(MSG_MAX).Find(&search_ids).Error
 	if err != nil {
 		return err
 	}
