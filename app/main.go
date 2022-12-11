@@ -36,6 +36,8 @@ type RetMessage struct {
 	Name      string
 	Message   string
 	CreatedAt time.Time
+	IsMe      bool
+	wsconn    *websocket.Conn
 }
 
 // getMessage関数が返す構造体
@@ -77,7 +79,7 @@ func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn, broadcastChan *
 		case "getMessage":
 			retMsg = getMessage(db)
 		case "postMessage":
-			retMsg = postMessage(c, db, broadcastChan.c, clientMsg)
+			retMsg = postMessage(c, db, ws, broadcastChan.c, clientMsg)
 		default:
 			retMsg = PostRetMessage{Status: "method error"}
 		}
@@ -95,25 +97,39 @@ func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn, broadcastChan *
 
 // cに送られたメッセージをブロードキャストする関数
 func broadcastMsg(wsMap *WsMap, c *BroadChan) {
-	// このmapをgoroutineで回してbroadcast、これは更新があったら回すのを生やすって感じでよさそう？要検討
-
 	for {
 		// チャネルにメッセージが放り込まれるの待ち
-		// interface定義してちゃんとそっちでやるとWriteJSONが使えると思う
-		mess := <-c.c
+		msg := <-c.c
 
-		// map用とws用のロック
+		// map用のロック
 		wsMap.RLock()
-		c.Lock()
 		for ws := range wsMap.m {
-			// 各wsにメッセージを送る
-			err := ws.WriteJSON(mess)
-			if err != nil {
-				fmt.Println(err)
-				continue
+			// 送信先が送信元と同じならば
+			if ws == msg.wsconn {
+				msg.IsMe = true
+
+				// ws用のロック
+				c.Lock()
+
+				// 各wsにメッセージを送る
+				err := ws.WriteJSON(msg)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+
+				c.Unlock()
+			} else {
+				msg.IsMe = false
+
+				// 各wsにメッセージを送る
+				err := ws.WriteJSON(msg)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
 			}
 		}
-		c.Unlock()
 		wsMap.RUnlock()
 	}
 }
