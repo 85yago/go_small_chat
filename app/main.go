@@ -61,17 +61,6 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// IPを弾くためのMiddleware
-// ginのmiddlewareは/wsへの接続時に呼ばれる
-// func ipBan() gin.HandlerFunc {
-// 	return func(ctx *gin.Context) {
-// 		ip := ctx.ClientIP()
-// 		if ip != "127.0.0.1" {
-
-// 		}
-// 	}
-// }
-
 // クライアントとのwsの処理
 func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn, broadcastChan *BroadChan) {
 	for {
@@ -191,13 +180,17 @@ func main() {
 	// ブロードキャスト用の関数
 	go broadcastMsg(&wsMap, &broadcastChan)
 
+	// 国内ipのリストを読み込む
+	internalIpList := readIpList()
+
 	// ページを返す
 	r.StaticFile("/chat", "../public/chat.html")
 	r.StaticFile("/chat.js", "../public/chat.js")
 	r.StaticFile("/", "../public/index.html")
 
 	// /wsでハンドリング
-	r.GET("/ws", wshandler(db, &wsMap, &broadcastChan))
+	// ip制限を書けるミドルウェアも挟む
+	r.GET("/ws", ipBan(internalIpList), wshandler(db, &wsMap, &broadcastChan))
 
 	// 8080でリッスン
 	r.Run(":8080")
