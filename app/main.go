@@ -180,8 +180,12 @@ func main() {
 	// ブロードキャスト用の関数
 	go broadcastMsg(&wsMap, &broadcastChan)
 
+	// 国内ipのリストを読み込む
+	internalIpList := readIpList()
+
 	// /wsでハンドリング
-	r.GET("/ws", wshandler(db, &wsMap, &broadcastChan))
+	// ip制限をかけるミドルウェアも挟む
+	r.GET("/ws", ipBan(internalIpList), wshandler(db, &wsMap, &broadcastChan))
 
 	// 8080でリッスン
 	r.Run(":8080")
