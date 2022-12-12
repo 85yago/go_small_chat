@@ -9,15 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// 国内IPのリストをテキストファイルから読み込む関数
+// 通信を許可するIPのリストをテキストファイルから読み込む関数
 // テキストファイルのルール:
-//   - テキストファイルの名前は "internal_ip_list"
+//   - テキストファイルの名前は "ip_white_list"
 //   - 各行につきひとつ，CIDR形式のIPを記述する
 //   - 空行は無視される
 //   - #で始まる行は無視される
 func readIpList() []*net.IPNet {
 	var ipset []*net.IPNet
-	fp, err := os.Open("internal_ip_list")
+	fp, err := os.Open("ip_white_list")
 	if err != nil {
 		panic(err)
 	}
@@ -25,15 +25,16 @@ func readIpList() []*net.IPNet {
 
 	scanner := bufio.NewScanner(fp)
 
-	for scanner.Scan() {
+	fmt.Println("# About IP whitelist")
 
+	for scanner.Scan() {
 		// 空行はスキップ
 		if scanner.Text() == "" {
 			continue
 		}
 		// #で始まる行はコメントとしてスキップ
 		if scanner.Text()[0] == '#' {
-			println(scanner.Text())
+			fmt.Println(scanner.Text())
 			continue
 		}
 
@@ -73,7 +74,7 @@ func ipBan(iplist []*net.IPNet) gin.HandlerFunc {
 
 		// 国内IPリストに載っていなければwsを繋がない
 		if !isInternalIp(net.ParseIP(ip), iplist) {
-			fmt.Printf("I was accessed from invalid IP : ")
+			fmt.Printf("I was accessed from the invalid IP : ")
 			fmt.Println(ip)
 			ctx.JSON(418, "I'm a teapot")
 			ctx.Abort()
