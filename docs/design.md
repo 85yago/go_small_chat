@@ -48,6 +48,18 @@
 - db    : データベース
 - public: フロントエンド APIを叩く
 
+### mainパッケージ内各ファイル概略
+|ファイル名         |内容概略                       |
+|-------------------|-------------------------------|
+|main.go            |本体                           |
+|db_controller.go   |dbのAPIの実装                  |
+|ws_connect.go      |websocketの確立と管理          |
+|def_message_type.go|通信に用いるメッセージ型の定義 |
+|comm_client.go     |clientとのメッセージのやりとり |
+|get_message.go     |getMessageメソッドの実装       |
+|post_message.go    |postMessageメソッドの実装      |
+|ipban_mw.go        |ip制限をかけるginのミドルウェア|
+
 ## API設計
 
 (chat-room-usecase.drawioも参照すること)

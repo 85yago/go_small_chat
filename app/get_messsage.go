@@ -1,3 +1,5 @@
+// クライアントが叩くgetMessageのサーバ側実装を記述する
+
 package main
 
 import (

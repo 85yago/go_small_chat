@@ -1,3 +1,5 @@
+// IP制限を行うginのミドルウェアを記述する
+
 package main
 
 import (
