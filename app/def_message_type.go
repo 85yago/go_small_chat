@@ -22,12 +22,13 @@ const (
 	POSTMSG   SendType = "postReturn"
 )
 
+// データ送信用の構造体 最終的にすべてDataにつっこまれる
 type SendData struct {
-	DataType SendType    `json:"type"`
-	Data     interface{} `json:"data"`
+	DataType SendType `json:"type"`
+	Data     any      `json:"data"` // ここに各構造体の"ポインタを"格納する
 }
 
-// Message構造体の必要な情報のみの構造体
+// broadcast時に送信する構造体
 type RetMessage struct {
 	Name      string    `json:"name"`
 	Message   string    `json:"message"`

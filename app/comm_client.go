@@ -21,14 +21,17 @@ type BroadChan struct {
 func broadcastMsg(wsMap *WsMap, c *BroadChan) {
 	for {
 		// チャネルにメッセージが放り込まれるの待ち
-		msg := <-c.c
+		cmsg := <-c.c
+		var msg SendData
+		msg.DataType = BROADCAST
+		msg.Data = &cmsg
 
 		// map用のロック
 		wsMap.RLock()
 		for ws := range wsMap.m {
 			// 送信先が送信元と同じならば
-			if ws == msg.wsconn {
-				msg.IsMe = true
+			if ws == msg.Data.(*RetMessage).wsconn {
+				msg.Data.(*RetMessage).IsMe = true
 
 				// ws用のロック
 				c.Lock()
@@ -42,7 +45,7 @@ func broadcastMsg(wsMap *WsMap, c *BroadChan) {
 
 				c.Unlock()
 			} else {
-				msg.IsMe = false
+				msg.Data.(*RetMessage).IsMe = false
 
 				// 各wsにメッセージを送る
 				err := ws.WriteJSON(msg)
