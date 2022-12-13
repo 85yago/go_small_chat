@@ -1,3 +1,5 @@
+// クライアントが叩くpostMessageのサーバ側実装を記述する
+
 package main
 
 import (
