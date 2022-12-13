@@ -70,15 +70,19 @@ from client
 from server
 ```json
 {
-    "count": 10,
-    "data": [
-        {
-            "name":"ユーザーが決めた名前",
-            "message":"投稿するメッセージ(半角1文字以上)",
-            "createtime": "2022-10-1 10:10:10.111"
-        },
-        {},
-    ]
+    "type": "getReturn",
+    "data":
+    {
+        "count": 10,
+        "data": [
+            {
+                "name":"ユーザーが決めた名前",
+                "message":"投稿するメッセージ(半角1文字以上)",
+                "createtime": "2022-10-1 10:10:10.111"
+            },
+            {},
+        ]
+    }
 }
 ```
 
@@ -98,13 +102,21 @@ from server
 
 ```json
 {
-    "status": "OK"
+    "type": "postReturn",
+    "data":
+    {
+        "status": "OK"
+    }
 }
 ```
 
 ```json
 {
-    "status": "error"
+    "type": "postReturn",
+    "data":
+    {
+        "status": "error"
+    }
 }
 ```
 
@@ -114,14 +126,18 @@ from server
 
 ```json
 {
-    "count": 1,
-    "data": [
-        {
-            "name":"ユーザーが決めた名前",
-            "message":"投稿するメッセージ(半角1文字以上)",
-            "createtime": "2022-10-1 10:10:10.111"
-        }
-    ]
+    "type": "broadcastReturn",
+    "data":
+    {
+        "count": 1,
+        "data": [
+            {
+                "name":"ユーザーが決めた名前",
+                "message":"投稿するメッセージ(半角1文字以上)",
+                "createtime": "2022-10-1 10:10:10.111"
+            }
+        ]
+    }
 }
 ```
 
