@@ -95,3 +95,6 @@ db_data/*
 
 # go mod
 app/vendor
+
+# debug_bin
+app/__debug_bin
