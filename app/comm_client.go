@@ -70,20 +70,27 @@ func procClient(c *gin.Context, db *gorm.DB, ws *websocket.Conn, broadcastChan *
 			break
 		}
 
+		// sendMsg:実際に送られるデータ
+		// retMsg :sendMsgに含む各メソッドに対応したデータ
+		var sendMsg SendData
 		var retMsg any
+		sendMsg.Data = &retMsg
 
 		// 送られたjson読んでクライアントがどっちを呼び出してるか判定
 		switch clientMsg.Method {
 		case "getMessage":
+			sendMsg.DataType = GETMSG
 			retMsg = getMessage(db)
 		case "postMessage":
+			sendMsg.DataType = POSTMSG
 			retMsg = postMessage(c, db, ws, broadcastChan.c, clientMsg)
 		default:
+			sendMsg.DataType = ERRORMSG
 			retMsg = PostRetMessage{Status: "method error"}
 		}
 
 		broadcastChan.Lock()
-		err = ws.WriteJSON(retMsg)
+		err = ws.WriteJSON(sendMsg)
 		broadcastChan.Unlock()
 		// クライアントに返す
 		if err != nil {
