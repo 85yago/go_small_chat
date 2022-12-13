@@ -20,9 +20,12 @@ const (
 	BROADCAST SendType = "broadcast"
 	GETMSG    SendType = "getReturn"
 	POSTMSG   SendType = "postReturn"
+	ERRORMSG  SendType = "invalidMethod"
 )
 
-// データ送信用の構造体 最終的にすべてDataにつっこまれる
+// データ送信用の構造体
+// 最終的にすべての~~RetMessageは(SendData).Dataにつっこまれる
+// .Dataにつっこむ処理はcomm_client内で実装
 type SendData struct {
 	DataType SendType `json:"type"`
 	Data     any      `json:"data"` // ここに各構造体の"ポインタを"格納する
