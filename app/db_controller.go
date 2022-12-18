@@ -1,3 +1,5 @@
+// dbの読み書きのAPIを記述する
+
 package main
 
 import (

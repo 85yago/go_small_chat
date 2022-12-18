@@ -48,6 +48,18 @@
 - db    : データベース
 - public: フロントエンド APIを叩く
 
+### mainパッケージ内各ファイル概略
+|ファイル名         |内容概略                       |
+|-------------------|-------------------------------|
+|main.go            |本体                           |
+|db_controller.go   |dbのAPIの実装                  |
+|ws_connect.go      |websocketの確立と管理          |
+|def_message_type.go|通信に用いるメッセージ型の定義 |
+|comm_client.go     |clientとのメッセージのやりとり |
+|get_message.go     |getMessageメソッドの実装       |
+|post_message.go    |postMessageメソッドの実装      |
+|ipban_mw.go        |ip制限をかけるginのミドルウェア|
+
 ## API設計
 
 (chat-room-usecase.drawioも参照すること)
@@ -70,15 +82,21 @@ from client
 from server
 ```json
 {
-    "count": 10,
-    "data": [
-        {
-            "name":"ユーザーが決めた名前",
-            "message":"投稿するメッセージ(半角1文字以上)",
-            "createtime": "2022-10-1 10:10:10.111"
-        },
-        {},
-    ]
+    "type": "getReturn",
+    "data":
+    {
+        "status": "OK",
+        "count": 10,
+        "messages": [
+            {
+                "name":"ユーザーが決めた名前",
+                "message":"投稿するメッセージ(半角1文字以上)",
+                "createtime":"2022-10-1 10:10:10.111",
+                "isme":false
+            },
+            {},
+        ]
+    }
 }
 ```
 
@@ -98,13 +116,21 @@ from server
 
 ```json
 {
-    "status": "OK"
+    "type": "postReturn",
+    "data":
+    {
+        "status": "OK"
+    }
 }
 ```
 
 ```json
 {
-    "status": "error"
+    "type": "postReturn",
+    "data":
+    {
+        "status": "error"
+    }
 }
 ```
 
@@ -114,14 +140,14 @@ from server
 
 ```json
 {
-    "count": 1,
-    "data": [
-        {
-            "name":"ユーザーが決めた名前",
-            "message":"投稿するメッセージ(半角1文字以上)",
-            "createtime": "2022-10-1 10:10:10.111"
-        }
-    ]
+    "type": "broadcast",
+    "data":
+    {
+        "name":"ユーザーが決めた名前",
+        "message":"投稿するメッセージ(半角1文字以上)",
+        "createtime": "2022-10-1 10:10:10.111",
+        "isme": false
+    }
 }
 ```
 

@@ -1,7 +1,10 @@
+// クライアントが叩くpostMessageのサーバ側実装を記述する
+
 package main
 
 import (
 	"app/pkg_dbinit"
+	"regexp"
 	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
@@ -15,12 +18,32 @@ const MSG_MAX_LEN = 100
 // ユーザーネームの最大文字数
 const NAME_MAX_LEN = 10
 
+// 禁止メッセージを設定する正規表現文字列
+const NG_MSG = "^[\\s　]*$"
+
+// 禁止メッセージ判定用の正規表現をコンパイルする関数
+func ngMsgCompile() *regexp.Regexp {
+	return regexp.MustCompile(NG_MSG)
+}
+
+// 禁止メッセージか判定する関数
+func isNgMsg(reg *regexp.Regexp, str string) bool {
+	return reg.Match([]byte(str))
+}
+
 // APIのバックエンド側の実装
 // クライアントがメッセージ投稿に使い、メッセージをサーバーに送信する
 // サーバーは受け取ったメッセージをDBに登録
 // DBへの登録に成功した場合はブロードキャストチャンネルにデータを流し込む
 // DBへの登録に失敗した場合はエラーメッセージを返す
 func postMessage(c *gin.Context, db *gorm.DB, ws *websocket.Conn, broadcastChan chan<- RetMessage, clientMsg ClientMessage) PostRetMessage {
+	// 空欄のメッセージは拒否する
+	// TODO:禁止メッセージコンパイルをmainで行うように変更する
+	// 禁止メッセージの正規表現のコンパイル
+	ngReg := ngMsgCompile()
+	if isNgMsg(ngReg, clientMsg.Message) {
+		return PostRetMessage{Status: "message error"}
+	}
 	// 終了メッセージを格納する変数
 	// ("OK" or エラーメッセージ)
 	var ret PostRetMessage
