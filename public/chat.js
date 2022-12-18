@@ -160,14 +160,14 @@ document.addEventListener('DOMContentLoaded',function(event){
         // データの準備
         let send_data = {};
         send_data["method"] = "postMessage";
-        send_data["name"] = document.getElementById('name').value;
-        send_data["message"] = document.getElementById('message').value;
+        send_data["name"] = document.getElementById('input_name').value;
+        send_data["message"] = document.getElementById('input_message').value;
 
         // データの送信
         socket.send(JSON.stringify(send_data));
 
         // メッセージ欄を空にする
-        document.getElementById('message').value = "";
+        document.getElementById('input_message').value = "";
     });
 });
 
