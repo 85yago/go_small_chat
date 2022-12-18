@@ -12,10 +12,16 @@ import (
 	"gorm.io/gorm"
 )
 
+// 各wsに持たせるデータ
+// iphash : ipのMD5ハッシュ値（を文字列化したもの）
+type WsMapData struct {
+	// iphash string
+}
+
 // wsの保存用
 type WsMap struct {
 	sync.RWMutex
-	m map[*websocket.Conn]struct{}
+	m map[*websocket.Conn]WsMapData
 }
 
 // upgraderはHTTPをWSにするときに呼ばれる
@@ -26,6 +32,14 @@ var upgrader = websocket.Upgrader{
 		return true
 	},
 }
+
+// 未実装
+// // ipのハッシュを計算して返す関数
+// func ipToMd5(ip string) string {
+// 	bip := []byte(ip+"salt")
+// 	md5ip := md5.Sum(bip)
+// 	return hex.EncodeToString(md5ip[:])
+// }
 
 // ws用のエンドポイントのハンドラ
 func wshandler(db *gorm.DB, wsMap *WsMap, broadcastChan *BroadChan) func(*gin.Context) {
@@ -49,7 +63,7 @@ func wshandler(db *gorm.DB, wsMap *WsMap, broadcastChan *BroadChan) func(*gin.Co
 
 		// ブロードキャスト用にソケットを保存
 		wsMap.Lock()
-		wsMap.m[ws] = struct{}{}
+		wsMap.m[ws] = WsMapData{}
 		wsMap.Unlock()
 
 		// クライアントからのwebsocketを処理

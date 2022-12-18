@@ -10,12 +10,15 @@ import (
 func main() {
 	// DBの初期化をする
 	db := pkg_dbinit.DbInitialization()
-
 	// ginの初期化
 	r := gin.Default()
 
+	// 禁止メッセージの正規表現のコンパイル
+	// ngRegはpost_message.goで定義されるグローバル変数
+	ngReg = ngMsgCompile()
+
 	// broadcast用のmap生やしてGETの中でwsを保存しておく
-	var wsMap = WsMap{m: make(map[*websocket.Conn]struct{})}
+	var wsMap = WsMap{m: make(map[*websocket.Conn]WsMapData)}
 
 	// ブロードキャスト用のチャネル
 	var broadcastChan BroadChan
