@@ -147,7 +147,7 @@ function registorFunctions() {
     socket.addEventListener("message", receiveBroadcast);
     socket.addEventListener("open", forOpen);
     socket.addEventListener("close", forClose);
-    socket.addEventListener("error", forClose);
+    socket.addEventListener("error", forError);
 }
 
 // ここから実行される
