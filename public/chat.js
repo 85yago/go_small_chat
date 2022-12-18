@@ -1,15 +1,46 @@
 "use strict";
 
-var socket = new WebSocket('ws://localhost:8080/ws');
+const MAX_DISPLAY_MSG_COUNT = 100;
+const TRY_RECONNECT_COUNT = 5;
+let socket = new WebSocket('ws://localhost:8080/ws');
 
 // 接続時
-socket.onopen = function(event) {
+function forOpen(event) {
     console.log("接続したよ！");
 
     // データの用意と送信
     let get = {"method": "getMessage"};
     socket.send(JSON.stringify(get));
     console.log(`こんなデータを送ったよ: ${JSON.stringify(get)}`);
+};
+
+// エラー時
+function forError(error) {
+    console.log(`接続がエラったよ: ${error.message}`);
+};
+
+// 接続終了時
+function forClose(event) {
+    console.log('接続が死んだよ…');
+    let isReconnect = false;
+
+    for (let i = 0; i < TRY_RECONNECT_COUNT; i++) {
+        socket = new WebSocket('ws://localhost:8080/ws');
+        // CONNECTINGは微妙かも
+        if (socket.readyState == WebSocket.CONNECTING) {
+            isReconnect = true;
+            break;
+        }
+    }
+
+    if (isReconnect) {
+        console.log("接続し直したよ！");
+        setTimeout(() => {
+            registorFunctions();
+        }, 500);
+    }else{
+        throw "socket's error: dead socket.";
+    }
 };
 
 // メッセージを画面に表示する関数
@@ -30,6 +61,11 @@ function addMessage(msg) {
 
     // 画面に表示
     document.getElementById("message_area").prepend(p);
+
+    // MAX_DISPLAY_MSG_COUNTを上回った時に消す
+    while (MAX_DISPLAY_MSG_COUNT <= p.childElementCount) {
+        p.removeChild(p.lastChild); 
+    }
 }
 
 // getReturn受け取り用
@@ -104,20 +140,17 @@ function receiveBroadcast(event) {
     addMessage(received_data.data);
 }
 
-// データ受け取りイベント時に登録
-socket.addEventListener("message", getReturn);
-socket.addEventListener("message", postReturn);
-socket.addEventListener("message", receiveBroadcast);
+// 登録関数
+function registorFunctions() {
+    socket.addEventListener("message", getReturn);
+    socket.addEventListener("message", postReturn);
+    socket.addEventListener("message", receiveBroadcast);
+    socket.addEventListener("open", forOpen);
+    socket.addEventListener("close", forClose);
+    socket.addEventListener("error", forClose);
+}
 
-// 接続終了時
-socket.onclose = function(event) {
-    console.log('接続が死んだよ…');
-};
-
-// エラー時
-socket.onerror = function(error) {
-    console.log(`接続がエラったよ: ${error.message}`);
-};
+// ここから実行される
 
 document.addEventListener('DOMContentLoaded',function(event){
     // ボタン押した時の送信用関数
@@ -132,5 +165,10 @@ document.addEventListener('DOMContentLoaded',function(event){
 
         // データの送信
         socket.send(JSON.stringify(send_data));
+
+        // メッセージ欄を空にする
+        document.getElementById('message').value = "";
     });
 });
+
+registorFunctions();

@@ -29,6 +29,7 @@ func main() {
 	// ページを返す
 	r.StaticFile("/chat", "../public/chat.html")
 	r.StaticFile("/chat.js", "../public/chat.js")
+	r.StaticFile("/chat.css", "../public/chat.css")
 	r.StaticFile("/", "../public/index.html")
 
 	// /wsでハンドリング
