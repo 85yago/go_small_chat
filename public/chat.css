@@ -18,3 +18,12 @@ p {
   width: 70%;
   box-sizing: border-box;
 }
+
+#message_area{
+  overflow: hidden;
+  height: 75vh;
+}
+
+#back{
+  color: tomato;
+}
