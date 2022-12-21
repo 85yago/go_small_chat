@@ -2,7 +2,7 @@
 
 const MAX_DISPLAY_MSG_COUNT = 100;
 const TRY_RECONNECT_COUNT = 5;
-let socket = new WebSocket('ws://localhost:8080/ws');
+let socket = new WebSocket('wss://localhost:8080/ws');
 
 // 接続時
 function forOpen(event) {

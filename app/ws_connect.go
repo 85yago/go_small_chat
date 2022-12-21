@@ -29,6 +29,7 @@ type WsMap struct {
 var upgrader = websocket.Upgrader{
 	// TODO: ここ絶対直すこと
 	CheckOrigin: func(r *http.Request) bool {
+		// r.URL.
 		return true
 	},
 }
