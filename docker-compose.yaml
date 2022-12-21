@@ -7,9 +7,10 @@ services:
       dockerfile: Dockerfile
 
     ports:
-      - ${SERVICE_PORT:-6439}:6439
+      - ${SERVICE_PORT:-443}:443
 
     restart: always
+    
     depends_on:
       - db
 
@@ -19,7 +20,6 @@ services:
       - TZ="Asia/Tokyo"
 
     volumes:
-      - "./app:/var/app"
       - "./public:/var/public"
 
   db:

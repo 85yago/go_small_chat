@@ -36,10 +36,10 @@ func main() {
 	ipWhiteList := readIpList()
 
 	// ページを返す
-	r.StaticFile("/chat", "../public/chat.html")
-	r.StaticFile("/chat.js", "../public/chat.js")
-	r.StaticFile("/chat.css", "../public/chat.css")
-	r.StaticFile("/", "../public/index.html")
+	r.StaticFile("/chat", "/var/public/chat.html")
+	r.StaticFile("/chat.js", "/var/public/chat.js")
+	r.StaticFile("/chat.css", "/var/public/chat.css")
+	r.StaticFile("/", "/var/public/index.html")
 
 	// /wsでハンドリング
 	// ip制限をかけるミドルウェアも挟む
@@ -52,8 +52,6 @@ func main() {
 		Cache:      autocert.DirCache("/var/www/.cache"),
 	}
 
-	// 8080でリッスン
-	// r.Run(":8080")
-	// TODO: リッスンの仕方はあってる？
+	// 443でリッスン
 	log.Fatal(autotls.RunWithManager(r, &m))
 }

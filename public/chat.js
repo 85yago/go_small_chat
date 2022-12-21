@@ -2,7 +2,8 @@
 
 const MAX_DISPLAY_MSG_COUNT = 100;
 const TRY_RECONNECT_COUNT = 5;
-let socket = new WebSocket('wss://localhost:8080/ws');
+const WS_URL = "wss://azi.f5.si/ws";
+let socket = new WebSocket(WS_URL);
 
 // 接続時
 function forOpen(event) {
@@ -25,7 +26,7 @@ function forClose(event) {
     let isReconnect = false;
 
     for (let i = 0; i < TRY_RECONNECT_COUNT; i++) {
-        socket = new WebSocket('ws://localhost:8080/ws');
+        socket = new WebSocket(WS_URL);
         // CONNECTINGは微妙かも
         if (socket.readyState == WebSocket.CONNECTING) {
             isReconnect = true;
