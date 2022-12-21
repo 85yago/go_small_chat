@@ -18,6 +18,10 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
       - TZ="Asia/Tokyo"
 
+    volumes:
+      - "./app:/var/app"
+      - "./public:/var/public"
+
   db:
     image: postgres:15-alpine
 
