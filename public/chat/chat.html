@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja-JP">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <link href="./chat.css" rel="stylesheet">
+  <title>My chat</title>
+</head>
+
+<body>
+  <h1>GSC</h1>
+  <p><img src="./agi.png"></p>
+  <form>
+    <input type="text" id="input_name" name="name" placeholder="名無しのアジ" required>
+    <input type="text" id="input_message" name="message" required autocomplete="off">
+    <button id="send">送信</button>
+  </form>
+
+  <div id="message_area">
+  </div>
+
+  <div>
+    <a id="back" href="javascript:history.back()">戻る</a>
+  </div>
+  <script type="text/javascript" src="./chat.js"></script>
+</body>
+
+</html>
