@@ -1,14 +1,10 @@
 package main
 
 import (
-	"app/env"
 	"app/pkg_dbinit"
-	"log"
 
-	"github.com/gin-gonic/autotls"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"golang.org/x/crypto/acme/autocert"
 )
 
 func main() {
@@ -45,25 +41,5 @@ func main() {
 	// ip制限をかけるミドルウェアも挟む
 	r.GET("/ws", ipBan(ipWhiteList), wshandler(db, &wsMap, &broadcastChan))
 
-	if env.DEBUG {
-		r.StaticFile("/chat.js", "/var/public/chat_dev.js")
-
-		// 8080でリッスン
-		r.Run(":8080")
-	} else {
-		r.StaticFile("/chat.js", "/var/public/chat.js")
-
-		// ginのリリースモード
-		gin.SetMode(gin.ReleaseMode)
-
-		// TLS用の設定
-		m := autocert.Manager{
-			Prompt:     autocert.AcceptTOS,
-			HostPolicy: autocert.HostWhitelist("azi.f5.si"),
-			Cache:      autocert.DirCache("/var/www/.cache"),
-		}
-
-		// 443でリッスン
-		log.Fatal(autotls.RunWithManager(r, &m))
-	}
+	RunServer(r)
 }
