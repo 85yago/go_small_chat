@@ -9,7 +9,7 @@ function forOpen(event) {
     console.log("接続したよ！");
 
     // データの用意と送信
-    let get = {"method": "getMessage"};
+    let get = { "method": "getMessage" };
     socket.send(JSON.stringify(get));
     console.log(`こんなデータを送ったよ: ${JSON.stringify(get)}`);
 };
@@ -38,7 +38,7 @@ function forClose(event) {
         setTimeout(() => {
             registorFunctions();
         }, 500);
-    }else{
+    } else {
         throw "socket's error: dead socket.";
     }
 };
@@ -50,13 +50,14 @@ function addMessage(msg) {
     // メッセージをp要素に変換
     const p = document.createElement("p");
 
-    p.appendChild(document.createTextNode(`[`));
+    // 内容を連結する要素に加工
+    const userName = document.createElement("span").appendChild(document.createTextNode('[@' + msg.name + ']'));
+    const time = document.createTextNode('[' + createTime.toLocaleString() + ']');
+    const message = document.createTextNode(msg.message);
 
-    const user_name = document.createElement("span").appendChild(document.createTextNode('@' + msg.name));
-    p.appendChild(user_name);
-    
-    const text = ']' + '[' + createTime.toLocaleString() + ']' + msg.message;
-    const message = document.createTextNode(text);
+    // p要素に追加
+    p.appendChild(userName);
+    p.appendChild(time);
     p.appendChild(message);
 
     // 画面に表示
@@ -64,7 +65,7 @@ function addMessage(msg) {
 
     // MAX_DISPLAY_MSG_COUNTを上回った時に消す
     while (MAX_DISPLAY_MSG_COUNT <= p.childElementCount) {
-        p.removeChild(p.lastChild); 
+        p.removeChild(p.lastChild);
     }
 }
 
@@ -78,7 +79,7 @@ function getReturn(event) {
         console.log(error);
         return;
     }
-    
+
     if (received_data.type !== "getReturn") {
         return;
     }
@@ -106,7 +107,7 @@ function postReturn(event) {
         console.log(error);
         return;
     }
-    
+
     if (received_data.type !== "postReturn") {
         return;
     }
@@ -130,7 +131,7 @@ function receiveBroadcast(event) {
         console.log(error);
         return;
     }
-    
+
     if (received_data.type !== "broadcast") {
         return;
     }
@@ -152,9 +153,9 @@ function registorFunctions() {
 
 // ここから実行される
 
-document.addEventListener('DOMContentLoaded',function(event){
+document.addEventListener('DOMContentLoaded', function (event) {
     // ボタン押した時の送信用関数
-    document.getElementById('send').addEventListener('click', function(event){
+    document.getElementById('send').addEventListener('click', function (event) {
         event.preventDefault();
 
         // データの準備
