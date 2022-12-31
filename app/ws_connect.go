@@ -29,16 +29,7 @@ type WsMap struct {
 // upgraderはHTTPをWSにするときに呼ばれる
 // ここで許可するoriginや接続時間を設定する
 var upgrader = websocket.Upgrader{
-	// TODO: ここ絶対直すこと
-	// CheckOrigin: func(r *http.Request) bool {
-	// 	if env.DEBUG {
-	// 		// デバッグ用
-	// 		return true
-	// 	} else {
-	// 		// リリース用
-	// 		return true
-	// 	}
-	// },
+	// 何もなくてもよしなにしてくれるらしい
 }
 
 // 未実装
