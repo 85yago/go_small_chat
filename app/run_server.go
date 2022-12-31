@@ -12,15 +12,14 @@ import (
 
 // リリース用関数
 func runServer(r *gin.Engine) {
-	// ginのリリースモード
-	gin.SetMode(gin.ReleaseMode)
-
 	// TLS用の設定
 	m := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist("azi.f5.si"),
 		Cache:      autocert.DirCache("/var/www/.cache"),
 	}
+
+	log.Println("runnin release mode")
 
 	// 443でリッスン
 	log.Fatal(autotls.RunWithManager(r, &m))
