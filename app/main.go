@@ -1,6 +1,7 @@
 package main
 
 import (
+	"app/env"
 	"app/pkg_dbinit"
 	"log"
 
@@ -37,7 +38,6 @@ func main() {
 
 	// ページを返す
 	r.StaticFile("/chat", "/var/public/chat.html")
-	r.StaticFile("/chat.js", "/var/public/chat.js")
 	r.StaticFile("/chat.css", "/var/public/chat.css")
 	r.StaticFile("/", "/var/public/index.html")
 
@@ -45,13 +45,25 @@ func main() {
 	// ip制限をかけるミドルウェアも挟む
 	r.GET("/ws", ipBan(ipWhiteList), wshandler(db, &wsMap, &broadcastChan))
 
-	// TLS用の設定
-	m := autocert.Manager{
-		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist("azi.f5.si"),
-		Cache:      autocert.DirCache("/var/www/.cache"),
-	}
+	if env.DEBUG {
+		r.StaticFile("/chat.js", "/var/public/chat_dev.js")
 
-	// 443でリッスン
-	log.Fatal(autotls.RunWithManager(r, &m))
+		// 8080でリッスン
+		r.Run(":8080")
+	} else {
+		r.StaticFile("/chat.js", "/var/public/chat.js")
+
+		// ginのリリースモード
+		gin.SetMode(gin.ReleaseMode)
+
+		// TLS用の設定
+		m := autocert.Manager{
+			Prompt:     autocert.AcceptTOS,
+			HostPolicy: autocert.HostWhitelist("azi.f5.si"),
+			Cache:      autocert.DirCache("/var/www/.cache"),
+		}
+
+		// 443でリッスン
+		log.Fatal(autotls.RunWithManager(r, &m))
+	}
 }

@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -24,14 +23,22 @@ type WsMap struct {
 	m map[*websocket.Conn]WsMapData
 }
 
+// CheckOrigin returns true if the request Origin header is acceptable. If CheckOrigin is nil, then a safe default is used: return false if the Origin request header is present and the origin host is not equal to request Host header.
+// A CheckOrigin function should carefully validate the request origin to prevent cross-site request forgery.
+
 // upgraderはHTTPをWSにするときに呼ばれる
 // ここで許可するoriginや接続時間を設定する
 var upgrader = websocket.Upgrader{
 	// TODO: ここ絶対直すこと
-	CheckOrigin: func(r *http.Request) bool {
-		// r.URL.
-		return true
-	},
+	// CheckOrigin: func(r *http.Request) bool {
+	// 	if env.DEBUG {
+	// 		// デバッグ用
+	// 		return true
+	// 	} else {
+	// 		// リリース用
+	// 		return true
+	// 	}
+	// },
 }
 
 // 未実装
