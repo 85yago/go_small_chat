@@ -35,12 +35,12 @@ func main() {
 	go broadcastMsg(&wsMap, &broadcastChan)
 
 	// ページを返す
-	r.StaticFile("/chat", "../public/chat/chat.html")
-	r.StaticFile("/chat.js", "../public/chat/chat.js")
-	r.StaticFile("/chat.css", "../public/chat/chat.css")
-	r.StaticFile("/agi.png", "../public/chat/agi.png")
-	r.StaticFile("/favicon.ico", "../public/favicon.ico")
-	r.StaticFile("/", "../public/index.html")
+	r.StaticFile("/chat", "/var/public/chat/chat.html")
+	r.StaticFile("/chat.js", "/var/public/chat/chat.js")
+	r.StaticFile("/chat.css", "/var/public/chat/chat.css")
+	r.StaticFile("/agi.png", "/var/public/chat/agi.png")
+	r.StaticFile("/favicon.ico", "/var/public/favicon.ico")
+	r.StaticFile("/", "/var/public/index.html")
 
 	// /wsでハンドリング
 	r.GET("/ws", wshandler(db, &wsMap, &broadcastChan))
