@@ -1,0 +1,7 @@
+{
+  "editor.formatOnSave": true,
+  "[go]": {
+    "editor.defaultFormatter": "golang.go"
+  },
+  "editor.unicodeHighlight.ambiguousCharacters": false,
+}
