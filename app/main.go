@@ -16,6 +16,11 @@ func main() {
 	// https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies
 	r.SetTrustedProxies(nil)
 
+	// 国内ipのリストを読み込む
+	ipWhiteList := readIpList()
+	// ip制限をかけるミドルウェアを挟む
+	r.Use(ipBan(ipWhiteList))
+
 	// 禁止メッセージの正規表現のコンパイル
 	// ngRegはpost_message.goで定義されるグローバル変数
 	ngReg = ngMsgCompile()
@@ -29,9 +34,6 @@ func main() {
 	// ブロードキャスト用の関数
 	go broadcastMsg(&wsMap, &broadcastChan)
 
-	// 国内ipのリストを読み込む
-	ipWhiteList := readIpList()
-
 	// ページを返す
 	r.StaticFile("/chat", "../public/chat/chat.html")
 	r.StaticFile("/chat.js", "../public/chat/chat.js")
@@ -41,8 +43,7 @@ func main() {
 	r.StaticFile("/", "../public/index.html")
 
 	// /wsでハンドリング
-	// ip制限をかけるミドルウェアも挟む
-	r.GET("/ws", ipBan(ipWhiteList), wshandler(db, &wsMap, &broadcastChan))
+	r.GET("/ws", wshandler(db, &wsMap, &broadcastChan))
 
 	runServer(r)
 }
