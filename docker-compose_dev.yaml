@@ -5,6 +5,7 @@ services:
     build:
       context: app
       dockerfile: Dockerfile
+      target: development
 
     ports:
       - ${SERVICE_PORT:-443}:443

@@ -1,9 +1,19 @@
-FROM golang:1.19-alpine3.16
-
-RUN apk update && apk add alpine-sdk git ca-certificates && rm -rf /var/cache/apk/*
-
-WORKDIR /home/temp
-COPY ./go.mod .
-COPY ./go.sum .
-
+FROM golang:1.19 AS build
+WORKDIR /go/src/github.com/85yago/go_small_chat/app
+COPY . .
 RUN go mod download -x
+RUN GOOS=linux CGO_ENABLED=1 go build -o main . -tags=release -ldflags="-s -w" -trimpath
+
+FROM golang:1.19-bullseye AS development
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    gcc \
+    git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM alpine:3.16
+RUN apk --no-cache add ca-certificates
+COPY --from=build /go/src/github.com/85yago/go_small_chat/app/ip_white_list ./
+COPY --from=build /go/src/github.com/85yago/go_small_chat/app/main ./
+CMD ["./main"]

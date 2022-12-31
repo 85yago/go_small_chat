@@ -13,6 +13,9 @@ func main() {
 	// ginの初期化
 	r := gin.Default()
 
+	// https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies
+	r.SetTrustedProxies(nil)
+
 	// 禁止メッセージの正規表現のコンパイル
 	// ngRegはpost_message.goで定義されるグローバル変数
 	ngReg = ngMsgCompile()
@@ -41,6 +44,5 @@ func main() {
 	// ip制限をかけるミドルウェアも挟む
 	r.GET("/ws", ipBan(ipWhiteList), wshandler(db, &wsMap, &broadcastChan))
 
-	// 8080でリッスン
-	r.Run(":8080")
+	runServer(r)
 }
