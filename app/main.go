@@ -33,10 +33,12 @@ func main() {
 	ipWhiteList := readIpList()
 
 	// ページを返す
-	r.StaticFile("/chat", "/var/public/chat.html")
-	r.StaticFile("/chat.js", "/var/public/chat.js")
-	r.StaticFile("/chat.css", "/var/public/chat.css")
-	r.StaticFile("/", "/var/public/index.html")
+	r.StaticFile("/chat", "../public/chat/chat.html")
+	r.StaticFile("/chat.js", "../public/chat/chat.js")
+	r.StaticFile("/chat.css", "../public/chat/chat.css")
+	r.StaticFile("/agi.png", "../public/chat/agi.png")
+	r.StaticFile("/favicon.ico", "../public/favicon.ico")
+	r.StaticFile("/", "../public/index.html")
 
 	// /wsでハンドリング
 	// ip制限をかけるミドルウェアも挟む

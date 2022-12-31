@@ -59,13 +59,14 @@ function addMessage(msg) {
     // メッセージをp要素に変換
     const p = document.createElement("p");
 
-    p.appendChild(document.createTextNode(`[`));
+    // 内容を連結する要素に加工
+    const userName = document.createElement("span").appendChild(document.createTextNode('[@' + msg.name + ']'));
+    const time = document.createTextNode('[' + createTime.toLocaleString() + ']');
+    const message = document.createTextNode(msg.message);
 
-    const user_name = document.createElement("span").appendChild(document.createTextNode('@' + msg.name));
-    p.appendChild(user_name);
-
-    const text = ']' + '[' + createTime.toLocaleString() + ']' + msg.message;
-    const message = document.createTextNode(text);
+    // p要素に追加
+    p.appendChild(userName);
+    p.appendChild(time);
     p.appendChild(message);
 
     // 画面に表示
