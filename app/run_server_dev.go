@@ -7,9 +7,7 @@ import (
 )
 
 // デバッグ用関数
-func RunServer(r *gin.Engine) {
-	r.StaticFile("/chat.js", "/var/public/chat_dev.js")
-
+func runServer(r *gin.Engine) {
 	// 127.0.0.1:8080でリッスン
 	r.Run(":8080")
 }

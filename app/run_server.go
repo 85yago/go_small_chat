@@ -11,9 +11,7 @@ import (
 )
 
 // リリース用関数
-func RunServer(r *gin.Engine) {
-	r.StaticFile("/chat.js", "/var/public/chat.js")
-
+func runServer(r *gin.Engine) {
 	// ginのリリースモード
 	gin.SetMode(gin.ReleaseMode)
 

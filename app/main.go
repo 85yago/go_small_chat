@@ -34,6 +34,7 @@ func main() {
 
 	// ページを返す
 	r.StaticFile("/chat", "/var/public/chat.html")
+	r.StaticFile("/chat.js", "/var/public/chat.js")
 	r.StaticFile("/chat.css", "/var/public/chat.css")
 	r.StaticFile("/", "/var/public/index.html")
 
@@ -41,5 +42,5 @@ func main() {
 	// ip制限をかけるミドルウェアも挟む
 	r.GET("/ws", ipBan(ipWhiteList), wshandler(db, &wsMap, &broadcastChan))
 
-	RunServer(r)
+	runServer(r)
 }
