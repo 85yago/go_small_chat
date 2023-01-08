@@ -19,7 +19,7 @@ func runServer(r *gin.Engine) {
 		Cache:      autocert.DirCache("/var/www/.cache"),
 	}
 
-	log.Println("runnin release mode")
+	log.Println("running release mode")
 
 	// 443でリッスン
 	log.Fatal(autotls.RunWithManager(r, &m))

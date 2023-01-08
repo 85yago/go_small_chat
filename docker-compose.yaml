@@ -22,9 +22,12 @@ services:
 
     volumes:
       - "./public:/var/public"
+      - "./cache:/var/www/.cache"
 
   db:
     image: postgres:15-alpine
+
+    hostname: db
 
     restart: always
 
