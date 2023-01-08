@@ -98,3 +98,6 @@ app/vendor
 
 # debug_bin
 app/__debug_bin
+
+# for autocert.DirCache
+cache/*
