@@ -7,6 +7,7 @@ p {
   line-height: 1.3;
   margin-top: 3px;
   margin-bottom: 3px;
+  width: 100%;
 }
 
 #input_name {
@@ -31,14 +32,19 @@ p {
   }
 }
 
-@media screen and (max-width: 700px) {
+@media screen and (max-width: 500px) {
+  #azi {
+    width: 100%;
+    height: auto;
+  }
+
   #input_name {
-    width: 140px;
+    width: 35%;
     box-sizing: border-box;
   }
 
   #input_message {
-    width: 490px;
+    width: 100%;
     box-sizing: border-box;
   }
 }
