@@ -38,7 +38,7 @@ func main() {
 	r.StaticFile("/chat", "/var/public/chat/chat.html")
 	r.StaticFile("/chat.js", "/var/public/chat/chat.js")
 	r.StaticFile("/chat.css", "/var/public/chat/chat.css")
-	r.StaticFile("/agi.png", "/var/public/chat/agi.png")
+	r.StaticFile("/azi.png", "/var/public/chat/azi.png")
 	r.StaticFile("/favicon.ico", "/var/public/favicon.ico")
 	r.StaticFile("/", "/var/public/index.html")
 
